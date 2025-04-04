@@ -1,0 +1,66 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'com.legends'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+javafx {
+    version = '17.0.6'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+dependencies {
+    implementation('org.openpnp:opencv:4.5.1-2') // OpenCV for advanced image processing (optional)
+    implementation('org.controlsfx:controlsfx:11.1.2')
+
+    // ✅ Explicitly include JavaFX runtime so it's bundled inside the JAR
+    implementation 'org.openjfx:javafx-controls:17.0.14'
+    implementation 'org.openjfx:javafx-graphics:17.0.14'
+    implementation 'org.openjfx:javafx-base:17.0.14'
+    implementation 'org.openjfx:javafx-fxml:17.0.14'
+}
+
+application{
+    mainClass = 'com.legends.Main'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.legends.Main',
+                'Class-Path': '.',
+                'Add-Modules': 'javafx.controls,javafx.fxml,javafx.graphics,javafx.base'
+        )
+
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('TextureApp')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+
+    // ✅ Ensure all JavaFX dependencies are included in the JAR
+    mergeServiceFiles()
+    zip64 true
+
+    dependencies {
+        include(dependency('org.openpnp:opencv:4.5.1-2'))
+//        include(dependency('org.controlsfx:controlsfx:11.1.2'))
+        include(dependency('org.openjfx:javafx-controls:17.0.14'))
+        include(dependency('org.openjfx:javafx-graphics:17.0.14'))
+        include(dependency('org.openjfx:javafx-base:17.0.14'))
+        include(dependency('org.openjfx:javafx-fxml:17.0.14'))
+    }
+}
