@@ -6,6 +6,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -13,7 +14,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.event.EventTarget;
 
 
 import javax.imageio.ImageIO;
@@ -30,6 +30,7 @@ public class TextureApp extends Application {
     private File selectedFile;
     private VBox colorBox;
     private List<ColorPicker> colorPickers = new ArrayList<>();
+    private List<TextField> hexFields = new ArrayList<>();
 
     public static void main(String[] args){
         launch(args);
@@ -82,8 +83,23 @@ public class TextureApp extends Application {
     }
     private void addColorsPicker() {
         ColorPicker colorPicker = new ColorPicker();
+        TextField hexField = new TextField();
+        hexField.setPromptText("#RRGGBB");
         colorPickers.add(colorPicker);
-        HBox colorRow = new HBox(5, colorPicker);
+        hexFields.add(hexField);
+
+        // Sync ColorPicker -> HexField
+        colorPicker.setOnAction(e -> {
+            Color color = colorPicker.getValue();
+            String hex = String.format("#%02X%02X%02X",
+                    (int)(color.getRed() * 255),
+                    (int)(color.getGreen() * 255),
+                    (int)(color.getBlue() * 255));
+            hexField.setText(hex);
+        });
+
+        HBox colorRow = new HBox(10, new Label("Color:"), colorPicker, new Label("Hex:"), hexField);
+        colorRow.setPadding(new Insets(5));
         colorBox.getChildren().add(colorRow);
     }
     private void applyRetexturing() {
@@ -93,8 +109,8 @@ public class TextureApp extends Application {
             BufferedImage image = ImageIO.read(selectedFile);
 
             List<java.awt.Color> palette = new ArrayList<>();
-            for (ColorPicker picker : colorPickers){
-                Color fxColor = picker.getValue();
+            for (int i = 0; i < colorPickers.size(); i++) {
+                Color fxColor = parseColorInput(hexFields.get(i).getText(), colorPickers.get(i).getValue());
                 java.awt.Color awtColor = new java.awt.Color(
                         (float) fxColor.getRed(),
                         (float) fxColor.getGreen(),
@@ -117,6 +133,22 @@ public class TextureApp extends Application {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private Color parseColorInput(String hex, Color fallback) {
+        if (hex != null && !hex.isEmpty()) {
+            try {
+                hex = hex.trim().replace("#", "");
+                if (hex.matches("(?i)[0-9a-f]{6}")) {
+                    int r = Integer.parseInt(hex.substring(0, 2), 16);
+                    int g = Integer.parseInt(hex.substring(2, 4), 16);
+                    int b = Integer.parseInt(hex.substring(4, 6), 16);
+                    return Color.rgb(r, g, b);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return fallback;
     }
 
     private void saveRetexturedImage(){
