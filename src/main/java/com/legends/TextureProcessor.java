@@ -3,7 +3,10 @@ package com.legends;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TextureProcessor {
 
@@ -44,4 +47,23 @@ public class TextureProcessor {
         int bDiff = c1.getBlue() - c2.getBlue();
         return Math.sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff);
     }
+    public static List<Color> extractUniqueColors(BufferedImage image, int maxColors) {
+        Set<Integer> colorSet = new LinkedHashSet<>();
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int rgb = image.getRGB(x, y);
+                colorSet.add(rgb);
+                if (colorSet.size() >= maxColors) break;
+            }
+            if (colorSet.size() >= maxColors) break;
+        }
+
+        List<Color> colorList = new ArrayList<>();
+        for (int rgb : colorSet) {
+            java.awt.Color c = new java.awt.Color(rgb);
+            colorList.add(c);
+        }
+        return colorList;
+    }
+
 }
